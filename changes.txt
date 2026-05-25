@@ -1,0 +1,8 @@
+1.0.0
+-----
+- Initial public release of user_filter_prefs module.
+- Persist and restore list filters per user/table.
+- Session backend enabled by default; optional DB backend.
+- No redirect for -qf=unfilter.
+- Related contexts explicitly excluded from persistence.
+- Added GitHub-ready documentation and GPL-2.0-or-later licensing.

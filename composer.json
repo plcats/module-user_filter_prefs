@@ -1,0 +1,20 @@
+{
+  "name": "xataface/user_filter_prefs",
+  "description": "Xataface module to persist and restore user list filters without redirects.",
+  "type": "library",
+  "license": "GPL-2.0-or-later",
+  "keywords": [
+    "xataface",
+    "module",
+    "filters",
+    "php"
+  ],
+  "autoload": {
+    "classmap": [
+      "user_filter_prefs.php"
+    ]
+  },
+  "require": {
+    "php": ">=5.6"
+  }
+}
