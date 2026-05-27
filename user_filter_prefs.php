@@ -28,6 +28,7 @@
  * table_name=dataface__filter_preferences
  * auto_create_table=1
  * use_session_cache=1
+ * disabled_tables=logs,archive_table
  *
  * ; technical keys never persisted
  * exclude_keys=skip,-skip,-limit,-sort,-action,-table,-relationship,-qf,-cursor,--msg
@@ -69,6 +70,10 @@ class modules_user_filter_prefs {
             return;
         }
 
+        if (in_array($table, $this->conf['disabled_tables'], true)) {
+            return;
+        }
+
         // Nei contesti related non salviamo e non applichiamo preferenze filtri.
         if ($this->isRelatedContext($query)) {
             return;
@@ -89,6 +94,9 @@ class modules_user_filter_prefs {
             unset($query['-qf']);
             if (isset($_GET['-qf'])) {
                 unset($_GET['-qf']);
+            }
+            if (isset($_REQUEST['-qf'])) {
+                unset($_REQUEST['-qf']);
             }
             return;
         }
@@ -145,18 +153,29 @@ class modules_user_filter_prefs {
         );
 
         if (isset($raw['exclude_keys']) && trim((string)$raw['exclude_keys']) !== '') {
-            $parts = preg_split('/\s*,\s*/', trim((string)$raw['exclude_keys']));
-            if (is_array($parts)) {
+            $parts = $this->parseCsvList($raw['exclude_keys']);
+            if (!empty($parts)) {
                 $exclude = array_values(array_unique(array_merge($exclude, $parts)));
             }
         }
 
         $include = array('-search');
         if (isset($raw['include_keys']) && trim((string)$raw['include_keys']) !== '') {
-            $parts = preg_split('/\s*,\s*/', trim((string)$raw['include_keys']));
-            if (is_array($parts)) {
+            $parts = $this->parseCsvList($raw['include_keys']);
+            if (!empty($parts)) {
                 $include = array_values(array_unique(array_merge($include, $parts)));
             }
+        }
+
+        $disabledTables = array();
+        if (isset($raw['disabled_tables']) && trim((string)$raw['disabled_tables']) !== '') {
+            foreach ($this->parseCsvList($raw['disabled_tables']) as $tableName) {
+                $safeName = $this->safeIdentifier($tableName);
+                if ($safeName !== '') {
+                    $disabledTables[] = $safeName;
+                }
+            }
+            $disabledTables = array_values(array_unique($disabledTables));
         }
 
         $backend = isset($raw['backend']) ? strtolower(trim((string)$raw['backend'])) : 'db';
@@ -172,9 +191,32 @@ class modules_user_filter_prefs {
                 : 'dataface__filter_preferences',
             'auto_create_table' => !isset($raw['auto_create_table']) || (string)$raw['auto_create_table'] !== '0',
             'use_session_cache' => !isset($raw['use_session_cache']) || (string)$raw['use_session_cache'] !== '0',
+            'disabled_tables' => $disabledTables,
             'exclude_keys' => $exclude,
             'include_keys' => $include
         );
+    }
+
+    private function parseCsvList($value) {
+        $value = trim((string)$value);
+        if ($value === '') {
+            return array();
+        }
+
+        $parts = preg_split('/\s*,\s*/', $value);
+        if (!is_array($parts)) {
+            return array();
+        }
+
+        $out = array();
+        foreach ($parts as $part) {
+            $part = trim((string)$part);
+            if ($part !== '') {
+                $out[] = $part;
+            }
+        }
+
+        return array_values(array_unique($out));
     }
 
     private function extractPersistableFilters($query) {
@@ -384,7 +426,15 @@ class modules_user_filter_prefs {
     }
 
     private function getDbConnection() {
-        // Generic DB connection for standalone distribution.
+        // Prefer the native Xataface connection when available.
+        if (function_exists('df_db')) {
+            $native = @df_db();
+            if ($native) {
+                return $native;
+            }
+        }
+
+        // Fallback to direct mysqli connection for standalone distribution.
         $app = Dataface_Application::getInstance();
         $dbConf = isset($app->_conf['_database']) && is_array($app->_conf['_database'])
             ? $app->_conf['_database']

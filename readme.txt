@@ -30,6 +30,7 @@ Features:
 - Excludes technical query params.
 - Excludes related context completely.
 - Supports -qf=unfilter without redirect.
+- Supports per-table disable list via disabled_tables.
 
 Requirements:
 =============
@@ -51,6 +52,7 @@ Installation:
 	backend=session
 	auto_create_table=0
 	use_session_cache=1
+	disabled_tables=
 	exclude_keys=skip,-skip,-limit,-sort,-action,-table,-relationship,-qf,-cursor,--msg
 	include_keys=-search
 
@@ -59,6 +61,11 @@ Usage:
 
 The module automatically persists explicit filters from list requests and restores
 saved filters when opening list-related filter/count actions.
+
+To disable the module on specific tables:
+
+	[user_filter_prefs]
+	disabled_tables=logs,audit_trail,temp_results
 
 Limitations:
 ============

@@ -1,3 +1,8 @@
+1.0.1
+-----
+- Added disabled_tables configuration to disable module behavior on selected tables.
+- Added full documentation for disabled_tables in README.md and readme.txt.
+
 1.0.0
 -----
 - Initial public release of user_filter_prefs module.

@@ -38,6 +38,7 @@ enabled=1
 backend=session
 auto_create_table=0
 use_session_cache=1
+disabled_tables=
 exclude_keys=skip,-skip,-limit,-sort,-action,-table,-relationship,-qf,-cursor,--msg
 include_keys=-search
 ```
@@ -49,8 +50,33 @@ include_keys=-search
 - `table_name`: storage table name (db backend only)
 - `auto_create_table`: `1|0` (db backend only)
 - `use_session_cache`: `1|0`
+- `disabled_tables`: comma-separated table names where the module is disabled
 - `exclude_keys`: comma-separated query keys never persisted
 - `include_keys`: comma-separated `-` prefixed keys explicitly allowed
+
+Defaults:
+- `enabled=1`
+- `backend=db`
+- `table_name=dataface__filter_preferences`
+- `auto_create_table=1`
+- `use_session_cache=1`
+- `disabled_tables=` (empty)
+- `exclude_keys=skip,-skip,-limit,-sort,-action,-table,-relationship,-qf,-cursor,--msg`
+- `include_keys=-search`
+
+## Disable for Specific Tables
+
+To disable this module for selected tables, configure `disabled_tables`:
+
+```ini
+[user_filter_prefs]
+disabled_tables=logs,audit_trail,temp_results
+```
+
+Notes:
+- Matching is exact and case-sensitive.
+- Only valid table identifiers are accepted (`A-Z`, `a-z`, `0-9`, `_`).
+- Disabled tables skip both save and restore behavior.
 
 ## Behavior
 
@@ -93,4 +119,4 @@ GPL-2.0-or-later. See `LICENSE`.
 
 ## Version
 
-- `1.0.0`
+- `1.0.1`
