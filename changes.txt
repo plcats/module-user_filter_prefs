@@ -1,3 +1,12 @@
+1.1.0
+-----
+- Added self-contained Apply detection via `-ufp-apply` without requiring core patches.
+- Added automatic `Annulla Filtri` action injection in list settings when no equivalent action exists.
+- Simplified unfilter contract to use only `-qf=unfilter`.
+- Improved unfilter URL generation to avoid carrying active filter params into clear-filter requests.
+- Documented delegate integration pattern for applications with default prefilters.
+- Switched module JS loading to direct module URL for compatibility with environments where JavascriptTool include paths do not include the module path.
+
 1.0.1
 -----
 - Added disabled_tables configuration to disable module behavior on selected tables.

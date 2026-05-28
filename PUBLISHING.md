@@ -36,7 +36,7 @@ From the new module folder:
 ```powershell
 git init
 git add .
-git commit -m "Initial release: user_filter_prefs 1.0.0"
+git commit -m "Release user_filter_prefs 1.1.0"
 ```
 
 ## 4. Create GitHub repository
@@ -61,9 +61,21 @@ git push -u origin main
 
 Suggested tag/version:
 
-- Tag: v1.0.0
-- Title: v1.0.0
+- Tag: v1.1.0
+- Title: v1.1.0
 - Notes: content from changes.txt
+
+## 6b. Suggested PR metadata
+
+- PR title: `Release user_filter_prefs 1.1.0`
+- Squash commit message: `Release user_filter_prefs 1.1.0`
+
+Suggested PR summary:
+
+- add self-contained Apply detection via `-ufp-apply`
+- add automatic `Annulla Filtri` injection in list settings
+- simplify unfilter contract to `-qf=unfilter`
+- document delegate integration for default prefilters
 
 ## 7. Post-publish checklist
 

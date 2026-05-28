@@ -27,6 +27,8 @@ Features:
 - Restore on list, mobile_filter_dialog, ajax_count_results, xf_infinite_scroll.
 - Persist only on list.
 - Session or DB backend.
+- Self-contained Apply detection via -ufp-apply (no core patch required).
+- Auto-injected Annulla Filtri action in list settings.
 - Excludes technical query params.
 - Excludes related context completely.
 - Supports -qf=unfilter without redirect.
@@ -62,6 +64,11 @@ Usage:
 The module automatically persists explicit filters from list requests and restores
 saved filters when opening list-related filter/count actions.
 
+If your ApplicationDelegate applies default prefilters, guard them during clear
+filter flows using:
+
+	(isset($query['-qf']) and $query['-qf'] == 'unfilter')
+
 To disable the module on specific tables:
 
 	[user_filter_prefs]
@@ -72,6 +79,11 @@ Limitations:
 
 - Related list filters are intentionally not persisted.
 - Array query values are not persisted.
+
+Version:
+========
+
+1.1.0
 
 Support:
 ========

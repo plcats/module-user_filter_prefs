@@ -12,6 +12,8 @@ The user_filter_prefs module stores and restores filters for the main list view
 - Restores filters on `list`, `mobile_filter_dialog`, `ajax_count_results`, `xf_infinite_scroll`.
 - Persists filters only on `list`.
 - Supports `session` or `db` backend.
+- Self-contained apply detection via module JS hook (`-ufp-apply`), no core patch required.
+- Auto-injects `Annulla Filtri` action in list settings (module-owned UI, removed when module is disabled).
 - Skips technical query parameters by default.
 - Fully excludes related contexts (`-relationship`, `-related:*`).
 - Supports `-qf=unfilter` without redirect.
@@ -84,8 +86,31 @@ Notes:
 - Does nothing for unsupported actions.
 - Does nothing in related context.
 - Clears stored preferences when `-qf=unfilter` is used on `list`.
+- Injects a list-settings button that links to `-qf=unfilter` when no equivalent action already exists.
+- Detects explicit Apply from filter dialog via module marker `-ufp-apply=1`.
 - Saves explicit filters only on `list`.
 - Restores saved filters into query, GET, and REQUEST when needed.
+
+## Developer Integration
+
+If your `ApplicationDelegate` (or table delegates) apply default prefilters,
+you should skip them during an explicit unfilter flow.
+
+The module exposes unfilter intent using one of these request signals:
+- `-qf=unfilter`
+
+Recommended pattern:
+
+```php
+$isUserUnfilter = (
+	(isset($query['-qf']) and $query['-qf'] == 'unfilter')
+);
+```
+
+Then guard default prefilter blocks with `and !$isUserUnfilter`.
+
+Notes:
+- Unfilter contract is based on `-qf=unfilter` only.
 
 ## Optional DB backend
 
@@ -119,4 +144,4 @@ GPL-2.0-or-later. See `LICENSE`.
 
 ## Version
 
-- `1.0.1`
+- `1.1.0`
