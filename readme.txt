@@ -27,10 +27,14 @@ Features:
 - Restore on list, mobile_filter_dialog, ajax_count_results, xf_infinite_scroll.
 - Persist only on list.
 - Session or DB backend.
+- Apply detection via -ufp-apply and -xf-filter-apply.
+- Core list_settings action (ufp_unfilter) for clear filters, with native Xataface rendering and i18n support.
 - Excludes technical query params.
 - Excludes related context completely.
 - Supports -qf=unfilter without redirect.
 - Supports per-table disable list via disabled_tables.
+- Normalizes placeholder values (=) so they are not persisted as active filters.
+- No core Xataface patch required.
 
 Requirements:
 =============
@@ -62,6 +66,21 @@ Usage:
 The module automatically persists explicit filters from list requests and restores
 saved filters when opening list-related filter/count actions.
 
+Value semantics:
+
+- field= is treated as no-filter placeholder (All) and is not persisted.
+- field== remains a valid explicit filter value.
+
+Mobile vs desktop:
+
+- Desktop result filters and mobile_filter_dialog build query strings differently.
+- The module normalizes both flows during persistence to keep behavior consistent.
+
+If your ApplicationDelegate applies default prefilters, guard them during clear
+filter flows using:
+
+	(isset($query['-qf']) and $query['-qf'] == 'unfilter')
+
 To disable the module on specific tables:
 
 	[user_filter_prefs]
@@ -72,6 +91,12 @@ Limitations:
 
 - Related list filters are intentionally not persisted.
 - Array query values are not persisted.
+- The standard mobile dialog does not provide an explicit "only empty values" UX for all field types.
+
+Version:
+========
+
+1.1.1
 
 Support:
 ========
