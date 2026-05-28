@@ -35,6 +35,9 @@
  *
  * ; allowed filter keys with '-' prefix (non-technical)
  * include_keys=-search
+ *
+ * ; Note: '=' is treated as no filter (All) and is never persisted.
+ * ; '==' remains persistable and represents exact-empty values.
  */
 class modules_user_filter_prefs {
 
@@ -43,6 +46,7 @@ class modules_user_filter_prefs {
 
     private $conf = array();
     private $baseURL = null;
+    private $unfilterActionRegisteredTables = array();
 
     public function __construct() {
         $app = Dataface_Application::getInstance();
@@ -78,13 +82,23 @@ class modules_user_filter_prefs {
             return;
         }
 
+        $this->registerCoreUnfilterAction($table);
+
         // Load module JS via URL to avoid JavascriptTool include-path constraints.
-        xf_script($this->getBaseURL() . '/user_filter_prefs.js', false);
+        // Add a version token to avoid stale browser cache during iterative fixes.
+        $moduleJsUrl = $this->getBaseURL() . '/user_filter_prefs.js';
+        $moduleJsPath = dirname(__FILE__) . DIRECTORY_SEPARATOR . 'user_filter_prefs.js';
+        if (file_exists($moduleJsPath)) {
+            $moduleJsUrl .= '?v=' . (string)@filemtime($moduleJsPath);
+        }
+        xf_script($moduleJsUrl, false);
 
         // Nei contesti related non salviamo e non applichiamo preferenze filtri.
         if ($this->isRelatedContext($query)) {
             return;
         }
+
+        $source = is_array($_GET) ? $_GET : array();
 
         // Elimina placeholder di filtri vuoti (es. '=') prima di qualsiasi persistenza/ripristino.
         $this->pruneNonPersistableFilterValues($query, $table);
@@ -106,9 +120,13 @@ class modules_user_filter_prefs {
 
         $explicitFilters = array();
         $isFilterApplyRequest = false;
+        $needsCanonicalRedirect = false;
         if ($action === 'list') {
             $explicitFilters = $this->extractPersistableFilters($query, $table);
-            $isFilterApplyRequest = $this->isFilterApplyRequest($query);
+            $isFilterApplyRequest = $this->isFilterApplyRequest($source) || $this->isFilterApplyRequest($query);
+            if ($isFilterApplyRequest) {
+                $needsCanonicalRedirect = $this->sourceHasNoFilterPlaceholderValues($source, $table);
+            }
             if ($isFilterApplyRequest) {
                 $this->clearApplyMarkers($query);
             }
@@ -118,6 +136,7 @@ class modules_user_filter_prefs {
                     unset($_SESSION['userFilters'][$table]);
                 }
                 $this->clearFiltersFromStorage($auth->getLoggedInUsername(), $table);
+                $this->maybeRedirectCanonicalList($needsCanonicalRedirect, $query);
                 return;
             }
         }
@@ -138,6 +157,47 @@ class modules_user_filter_prefs {
             $_SESSION['userFilters'][$table] = $storedFilters;
         }
 
+        // Request list con input filtri dal form: aggiorna set salvato includendo clear espliciti.
+        if ($action === 'list') {
+            if ($this->hasPersistableFilterInputInSource($source)) {
+                $updatedFilters = $storedFilters;
+                $clearedKeys = $this->extractClearedPersistableFilterKeysFromSource($source, $table);
+                foreach ($clearedKeys as $key) {
+                    if (isset($updatedFilters[$key])) {
+                        unset($updatedFilters[$key]);
+                    }
+                    if (isset($query[$key])) {
+                        unset($query[$key]);
+                    }
+                    if (isset($_GET[$key])) {
+                        unset($_GET[$key]);
+                    }
+                    if (isset($_REQUEST[$key])) {
+                        unset($_REQUEST[$key]);
+                    }
+                }
+
+                $sourceFilters = $this->extractPersistableFiltersFromSource($query, $source, $table);
+                foreach ($sourceFilters as $key => $val) {
+                    $updatedFilters[$key] = $val;
+                }
+
+                $updatedFilters = $this->sanitizePersistableFilterMap($updatedFilters, $table);
+                if ($this->conf['use_session_cache']) {
+                    $_SESSION['userFilters'][$table] = $updatedFilters;
+                }
+
+                if (empty($updatedFilters)) {
+                    $this->clearFiltersFromStorage($auth->getLoggedInUsername(), $table);
+                } else {
+                    $this->saveFiltersToStorage($auth->getLoggedInUsername(), $table, $updatedFilters);
+                }
+
+                $this->maybeRedirectCanonicalList($needsCanonicalRedirect, $query);
+                return;
+            }
+        }
+
         // Persistiamo nuovi filtri solo in action list.
         if ($action === 'list') {
             if (!empty($explicitFilters)) {
@@ -146,6 +206,7 @@ class modules_user_filter_prefs {
                     $_SESSION['userFilters'][$table] = $explicitFilters;
                 }
                 $this->saveFiltersToStorage($auth->getLoggedInUsername(), $table, $explicitFilters);
+                $this->maybeRedirectCanonicalList($needsCanonicalRedirect, $query);
                 return;
             }
         }
@@ -213,6 +274,54 @@ class modules_user_filter_prefs {
             }
         }
 
+        if ($this->hasPersistableFilterInputInSource($source)) {
+            $storedFilters = array();
+            if ($this->conf['use_session_cache']) {
+                if (!array_key_exists($table, $_SESSION['userFilters'])) {
+                    $_SESSION['userFilters'][$table] = $this->loadFiltersFromStorage($auth->getLoggedInUsername(), $table);
+                }
+                $storedFilters = $_SESSION['userFilters'][$table];
+            } else {
+                $storedFilters = $this->loadFiltersFromStorage($auth->getLoggedInUsername(), $table);
+            }
+
+            $storedFilters = $this->sanitizePersistableFilterMap($storedFilters, $table);
+            $updatedFilters = $storedFilters;
+
+            $clearedKeys = $this->extractClearedPersistableFilterKeysFromSource($source, $table);
+            foreach ($clearedKeys as $key) {
+                if (isset($updatedFilters[$key])) {
+                    unset($updatedFilters[$key]);
+                }
+                if (isset($query[$key])) {
+                    unset($query[$key]);
+                }
+                if (isset($_GET[$key])) {
+                    unset($_GET[$key]);
+                }
+                if (isset($_REQUEST[$key])) {
+                    unset($_REQUEST[$key]);
+                }
+            }
+
+            $sourceFilters = $this->extractPersistableFiltersFromSource($query, $source, $table);
+            foreach ($sourceFilters as $key => $val) {
+                $updatedFilters[$key] = $val;
+            }
+
+            $updatedFilters = $this->sanitizePersistableFilterMap($updatedFilters, $table);
+            if ($this->conf['use_session_cache']) {
+                $_SESSION['userFilters'][$table] = $updatedFilters;
+            }
+
+            if (empty($updatedFilters)) {
+                $this->clearFiltersFromStorage($auth->getLoggedInUsername(), $table);
+            } else {
+                $this->saveFiltersToStorage($auth->getLoggedInUsername(), $table, $updatedFilters);
+            }
+            return;
+        }
+
         $explicitFilters = $this->extractPersistableFiltersFromSource($query, $source, $table);
         if ($isFilterApplyRequest && empty($explicitFilters)) {
             if ($this->conf['use_session_cache'] && isset($_SESSION['userFilters'][$table])) {
@@ -234,6 +343,44 @@ class modules_user_filter_prefs {
             $this->baseURL = Dataface_ModuleTool::getInstance()->getModuleURL(__FILE__);
         }
         return $this->baseURL;
+    }
+
+    private function sourceHasNoFilterPlaceholderValues($source, $table = '') {
+        if (!is_array($source)) {
+            return false;
+        }
+
+        foreach ($source as $key => $value) {
+            if (!$this->isPersistableKey($key)) {
+                continue;
+            }
+            if (is_array($value)) {
+                continue;
+            }
+
+            $val = trim((string)$value);
+            if ($val !== '' && !$this->isPersistableValue($val, $key, $table)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function maybeRedirectCanonicalList($enabled, $query) {
+        if (!$enabled || !is_array($query)) {
+            return;
+        }
+
+        $app = Dataface_Application::getInstance();
+        $url = $app->url($query, false);
+        if (!$url) {
+            return;
+        }
+
+        if (!headers_sent()) {
+            header('Location: ' . $url, true, 302);
+        }
     }
 
     private function isFilterApplyRequest($source) {
@@ -270,6 +417,55 @@ class modules_user_filter_prefs {
                 unset($_REQUEST[$marker]);
             }
         }
+    }
+
+    private function registerCoreUnfilterAction($table) {
+        $table = trim((string)$table);
+        if ($table === '') {
+            return;
+        }
+
+        if (in_array($table, $this->unfilterActionRegisteredTables, true)) {
+            return;
+        }
+
+        $at = Dataface_ActionTool::getInstance();
+        $existing = $at->getActions(array('category' => 'list_settings', 'table' => $table));
+        foreach ($existing as $action) {
+            if (isset($action['name']) && (string)$action['name'] === 'ufp_unfilter') {
+                $this->unfilterActionRegisteredTables[] = $table;
+                return;
+            }
+            if (isset($action['url']) && strpos((string)$action['url'], '-qf=unfilter') !== false) {
+                $this->unfilterActionRegisteredTables[] = $table;
+                return;
+            }
+        }
+
+        $app = Dataface_Application::getInstance();
+        $url = $app->url(
+            array(
+                '-table' => $table,
+                '-action' => 'list',
+                '-qf' => 'unfilter'
+            ),
+            false
+        );
+
+        $at->addAction('ufp_unfilter', array(
+            'name' => 'ufp_unfilter',
+            'id' => 'ufp_unfilter',
+            'category' => 'list_settings',
+            'table' => $table,
+            'materialIcon' => 'delete_sweep',
+            'label' => df_translate('actions.ufp_unfilter.label', 'Clear Filters'),
+            'description' => df_translate('actions.ufp_unfilter.description', 'Clear all active filters'),
+            'permission' => 'list',
+            'url' => $url,
+            'order' => 98
+        ));
+
+        $this->unfilterActionRegisteredTables[] = $table;
     }
 
     private function loadConfig($app) {
@@ -440,7 +636,9 @@ class modules_user_filter_prefs {
                 continue;
             }
 
-            $effectiveValue = isset($query[$key]) ? $query[$key] : $value;
+            // Use raw source value first so cleared selects (e.g. "All") remain empty
+            // and do not get re-normalized to '=' by query transformations.
+            $effectiveValue = $value;
             if (is_array($effectiveValue)) {
                 continue;
             }
@@ -455,8 +653,61 @@ class modules_user_filter_prefs {
         return $out;
     }
 
+    private function hasPersistableFilterInputInSource($source) {
+        if (!is_array($source)) {
+            return false;
+        }
+
+        foreach ($source as $key => $value) {
+            if (!$this->isPersistableKey($key)) {
+                continue;
+            }
+            if (is_array($value)) {
+                continue;
+            }
+            return true;
+        }
+
+        return false;
+    }
+
+    private function extractClearedPersistableFilterKeysFromSource($source, $table = '') {
+        if (!is_array($source)) {
+            return array();
+        }
+
+        $out = array();
+        foreach ($source as $key => $value) {
+            if (!$this->isPersistableKey($key)) {
+                continue;
+            }
+            if (is_array($value)) {
+                continue;
+            }
+
+            $val = trim((string)$value);
+            if ($val === '') {
+                $out[] = $key;
+                continue;
+            }
+
+            // In mobile filter dialog, '=' is the "All" placeholder.
+            // Treat it as a clear signal so stale stored filters are removed.
+            if (!$this->isPersistableValue($val, $key, $table)) {
+                $out[] = $key;
+            }
+        }
+
+        return array_values(array_unique($out));
+    }
+
     private function isPersistableValue($value, $key = '', $table = '') {
         if ($value === '') {
+            return false;
+        }
+
+        // '=' is the "All"/no-filter placeholder in list filters: never persist it.
+        if ($value === '=') {
             return false;
         }
 

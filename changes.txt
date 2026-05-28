@@ -1,11 +1,21 @@
+1.1.1
+-----
+- Stabilized mobile and desktop filter-flow normalization without requiring Xataface core patches.
+- Added canonical list redirect after apply when placeholder values are present, to keep resulting URLs clean and consistent.
+- Improved frontend cache invalidation for module JS loading via version token.
+- Aligned publication documentation for GitHub release workflow.
+
 1.1.0
 -----
 - Added self-contained Apply detection via `-ufp-apply` without requiring core patches.
+- Added compatibility with legacy/core mobile apply marker `-xf-filter-apply`.
 - Added automatic `Annulla Filtri` action injection in list settings when no equivalent action exists.
 - Simplified unfilter contract to use only `-qf=unfilter`.
 - Improved unfilter URL generation to avoid carrying active filter params into clear-filter requests.
+- Normalized no-filter placeholder values (`=`) so they are treated as clear/no-filter and not persisted as active filters.
 - Documented delegate integration pattern for applications with default prefilters.
 - Switched module JS loading to direct module URL for compatibility with environments where JavascriptTool include paths do not include the module path.
+- Added cache-busting token on module JS URL to reduce stale frontend cache issues during upgrades.
 
 1.0.1
 -----

@@ -12,11 +12,13 @@ The user_filter_prefs module stores and restores filters for the main list view
 - Restores filters on `list`, `mobile_filter_dialog`, `ajax_count_results`, `xf_infinite_scroll`.
 - Persists filters only on `list`.
 - Supports `session` or `db` backend.
-- Self-contained apply detection via module JS hook (`-ufp-apply`), no core patch required.
-- Auto-injects `Annulla Filtri` action in list settings (module-owned UI, removed when module is disabled).
+- Apply detection supports both markers: `-ufp-apply` (module) and `-xf-filter-apply` (core mobile dialog).
+- Registers a core `list_settings` action (`ufp_unfilter`) for clear filters, with native Xataface action rendering and i18n support.
 - Skips technical query parameters by default.
 - Fully excludes related contexts (`-relationship`, `-related:*`).
 - Supports `-qf=unfilter` without redirect.
+- Normalizes no-filter placeholders (`=`) so they are not persisted as active filters.
+- Keeps behavior self-contained in the module (no core Xataface patch required).
 
 ## Requirements
 
@@ -86,10 +88,25 @@ Notes:
 - Does nothing for unsupported actions.
 - Does nothing in related context.
 - Clears stored preferences when `-qf=unfilter` is used on `list`.
-- Injects a list-settings button that links to `-qf=unfilter` when no equivalent action already exists.
-- Detects explicit Apply from filter dialog via module marker `-ufp-apply=1`.
+- Exposes clear-filters through the `ufp_unfilter` action in `list_settings`.
+- Detects explicit Apply from filter flows via `-ufp-apply=1` and `-xf-filter-apply=1`.
 - Saves explicit filters only on `list`.
 - Restores saved filters into query, GET, and REQUEST when needed.
+
+### Filter value semantics
+
+- `field=` is treated as no-filter placeholder ("All") and is not persisted.
+- `field==` remains a valid explicit filter value (for workflows that use it).
+- This normalization prevents stale placeholder filters from polluting persisted preferences.
+
+### Mobile vs Desktop filters
+
+Xataface uses different UI flows for desktop result filters (`use_xataface2_result_filters`) and mobile dialog (`mobile_filter_dialog`).
+
+- Desktop: filter query is built by result list JS.
+- Mobile: filter query is rebuilt by mobile dialog JS and may include placeholder values.
+
+The module handles both flows by normalizing source values during persistence, so active filters remain consistent across list reloads.
 
 ## Developer Integration
 
@@ -133,6 +150,14 @@ Storage columns:
 - Related list filters are intentionally not persisted.
 - Array query values are not persisted.
 - `-` prefixed keys are excluded unless whitelisted via `include_keys`.
+- The standard mobile dialog does not expose an explicit "only empty values" UX for all field types.
+
+## Verification checklist
+
+- Apply desktop filters and verify persistence after reload.
+- Apply mobile filters (including multi-select OR) and verify list results and persisted state.
+- Use clear filters (`ufp_unfilter` or `-qf=unfilter`) and verify preferences are removed.
+- Verify no core files are required to be modified.
 
 ## Support
 
@@ -144,4 +169,4 @@ GPL-2.0-or-later. See `LICENSE`.
 
 ## Version
 
-- `1.1.0`
+- `1.1.1`

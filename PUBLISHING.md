@@ -16,6 +16,11 @@ Optional secret scan in the module folder:
 Get-ChildItem -Recurse -File | Select-String -Pattern "password\s*=|api[_-]?key|token|secret|smtp" -CaseSensitive:$false
 ```
 
+Core integrity check (recommended):
+
+- Do not include local changes to Xataface core files in this module release.
+- The module is expected to work without core patching.
+
 ## 2. Create a dedicated repository folder
 
 Use a clean folder outside your application workspace and copy only module files:
@@ -36,7 +41,7 @@ From the new module folder:
 ```powershell
 git init
 git add .
-git commit -m "Release user_filter_prefs 1.1.0"
+git commit -m "Release user_filter_prefs 1.1.1"
 ```
 
 ## 4. Create GitHub repository
@@ -61,21 +66,21 @@ git push -u origin main
 
 Suggested tag/version:
 
-- Tag: v1.1.0
-- Title: v1.1.0
+- Tag: v1.1.1
+- Title: v1.1.1
 - Notes: content from changes.txt
 
 ## 6b. Suggested PR metadata
 
-- PR title: `Release user_filter_prefs 1.1.0`
-- Squash commit message: `Release user_filter_prefs 1.1.0`
+- PR title: `Release user_filter_prefs 1.1.1`
+- Squash commit message: `Release user_filter_prefs 1.1.1`
 
 Suggested PR summary:
 
-- add self-contained Apply detection via `-ufp-apply`
-- add automatic `Annulla Filtri` injection in list settings
-- simplify unfilter contract to `-qf=unfilter`
-- document delegate integration for default prefilters
+- no core-patch filter persistence module for Xataface lists
+- apply detection via `-ufp-apply` and `-xf-filter-apply`
+- clear-filters action integration (`ufp_unfilter`) and `-qf=unfilter` contract
+- mobile/desktop filter-flow normalization and documentation updates
 
 ## 7. Post-publish checklist
 
@@ -83,3 +88,5 @@ Suggested PR summary:
 - Verify LICENSE is visible and recognized.
 - Add repository topics (xataface, php, module, filters).
 - Optionally enable Issues and Discussions.
+- Verify desktop and mobile filter flows on a test app.
+- Verify no Xataface core modifications are required to use the module.
