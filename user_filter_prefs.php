@@ -3,7 +3,9 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  *
  * Xataface user_filter_prefs module
- * Copyright (C) 2026 user_filter_prefs contributors
+ * Copyright (C) 2026 plcats and contributors
+ * @author plcats
+ * @version 1.1.1
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software

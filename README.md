@@ -159,9 +159,18 @@ Storage columns:
 - Use clear filters (`ufp_unfilter` or `-qf=unfilter`) and verify preferences are removed.
 - Verify no core files are required to be modified.
 
+## Author
+
+[plcats](https://github.com/plcats)
+
+## Repository
+
+https://github.com/plcats/module-user_filter_prefs
+
 ## Support
 
 - Xataface forum: http://xataface.com/forum
+- GitHub Issues: https://github.com/plcats/module-user_filter_prefs/issues
 
 ## License
 

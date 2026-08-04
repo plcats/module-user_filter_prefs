@@ -1,8 +1,19 @@
 {
-  "name": "xataface/user_filter_prefs",
+  "name": "plcats/xataface-user-filter-prefs",
   "description": "Xataface module to persist and restore user list filters without redirects.",
   "type": "library",
   "license": "GPL-2.0-or-later",
+  "authors": [
+    {
+      "name": "plcats",
+      "homepage": "https://github.com/plcats"
+    }
+  ],
+  "homepage": "https://github.com/plcats/module-user_filter_prefs",
+  "support": {
+    "issues": "https://github.com/plcats/module-user_filter_prefs/issues",
+    "source": "https://github.com/plcats/module-user_filter_prefs"
+  },
   "keywords": [
     "xataface",
     "module",
@@ -16,5 +27,11 @@
   },
   "require": {
     "php": ">=5.6"
+  },
+  "extra": {
+    "xataface": {
+      "module": true,
+      "version": "1.1.1"
+    }
   }
 }

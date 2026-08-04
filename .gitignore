@@ -1,23 +1,17 @@
-# OS
+# OS / editor
 .DS_Store
 Thumbs.db
-
-# Editors
-.vscode/
-.idea/
-
-# Logs
-*.log
-
-# Dependencies
-vendor/
-node_modules/
-
-# Local env/config
-.env
-.env.*
-*.local
-
-# Temporary files
-*.tmp
 *.swp
+*~
+.idea/
+.vscode/
+*.code-workspace
+
+# Composer
+/vendor/
+composer.lock
+
+# Local / generated noise
+*.log
+*.tmp
+templates_c/

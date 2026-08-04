@@ -2,6 +2,14 @@
 
 This guide describes how to publish this module as a standalone GitHub repository.
 
+## Repository
+
+- GitHub repo: `module-user_filter_prefs`
+- Owner: [plcats](https://github.com/plcats)
+- URL: https://github.com/plcats/module-user_filter_prefs
+- Composer package: `plcats/xataface-user-filter-prefs`
+- Release tag: from `version.txt` (currently `1.1.1` → tag `v1.1.1`)
+
 ## 1. Preflight checks
 
 Run these checks from the module root:
@@ -26,12 +34,15 @@ Core integrity check (recommended):
 Use a clean folder outside your application workspace and copy only module files:
 
 - user_filter_prefs.php
+- user_filter_prefs.js
 - README.md
 - readme.txt
 - LICENSE
 - changes.txt
 - version.txt
 - composer.json
+- RELEASE_NOTES.md
+- PUBLISHING.md
 - .gitignore
 
 ## 3. Initialize git and first commit
@@ -48,17 +59,20 @@ git commit -m "Release user_filter_prefs 1.1.1"
 
 Create a new public repository (example):
 
-- Repository name: xataface-module-user_filter_prefs
+- Repository name: `module-user_filter_prefs`
+- Owner: `plcats`
 - Visibility: Public
 - Do not initialize with README or license (already present)
 
-## 5. Push to GitHub
+```powershell
+gh repo create plcats/module-user_filter_prefs --public --source=. --remote=origin
+```
 
-Replace URL with your repository URL:
+## 5. Push to GitHub
 
 ```powershell
 git branch -M main
-git remote add origin https://github.com/<your-user>/xataface-module-user_filter_prefs.git
+git remote add origin https://github.com/plcats/module-user_filter_prefs.git
 git push -u origin main
 ```
 
@@ -66,9 +80,9 @@ git push -u origin main
 
 Suggested tag/version:
 
-- Tag: v1.1.1
-- Title: v1.1.1
-- Notes: content from changes.txt
+- Tag: `v1.1.1`
+- Title: `v1.1.1`
+- Notes: content from `changes.txt` / `RELEASE_NOTES.md`
 
 ## 6b. Suggested PR metadata
 

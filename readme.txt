@@ -1,5 +1,5 @@
 Xataface user_filter_prefs module
-Copyright (C) 2026 user_filter_prefs contributors
+Copyright (C) 2026 plcats and contributors
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License

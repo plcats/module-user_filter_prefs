@@ -1,3 +1,9 @@
+/**
+ * user_filter_prefs frontend helpers
+ *
+ * @version 1.1.1
+ * @author plcats
+ */
 (function () {
     function appendApplyMarker(urlStr) {
         try {
