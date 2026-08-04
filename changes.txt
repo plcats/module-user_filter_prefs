@@ -9,7 +9,7 @@
 -----
 - Added self-contained Apply detection via `-ufp-apply` without requiring core patches.
 - Added compatibility with legacy/core mobile apply marker `-xf-filter-apply`.
-- Added automatic `Annulla Filtri` action injection in list settings when no equivalent action exists.
+- Added automatic Clear Filters action injection in list settings when no equivalent action exists.
 - Simplified unfilter contract to use only `-qf=unfilter`.
 - Improved unfilter URL generation to avoid carrying active filter params into clear-filter requests.
 - Normalized no-filter placeholder values (`=`) so they are treated as clear/no-filter and not persisted as active filters.

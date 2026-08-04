@@ -95,14 +95,14 @@ class modules_user_filter_prefs {
         }
         xf_script($moduleJsUrl, false);
 
-        // Nei contesti related non salviamo e non applichiamo preferenze filtri.
+        // Skip save/restore in related-list contexts.
         if ($this->isRelatedContext($query)) {
             return;
         }
 
         $source = is_array($_GET) ? $_GET : array();
 
-        // Elimina placeholder di filtri vuoti (es. '=') prima di qualsiasi persistenza/ripristino.
+        // Drop empty-filter placeholders (e.g. '=') before any persist/restore.
         $this->pruneNonPersistableFilterValues($query, $table);
 
         if ($this->conf['use_session_cache']) {
@@ -111,7 +111,7 @@ class modules_user_filter_prefs {
             }
         }
 
-        // Unfilter: solo in action list, cancella preferenze senza redirect.
+        // Unfilter: on list only, clear preferences without redirect.
         if ($action === 'list' && isset($query['-qf']) && $query['-qf'] === 'unfilter') {
             if ($this->conf['use_session_cache'] && isset($_SESSION['userFilters'][$table])) {
                 unset($_SESSION['userFilters'][$table]);
@@ -132,7 +132,7 @@ class modules_user_filter_prefs {
             if ($isFilterApplyRequest) {
                 $this->clearApplyMarkers($query);
             }
-            // Apply esplicito con form vuoto: azzera preferenze salvate per questa tabella.
+            // Explicit Apply with empty form: clear saved preferences for this table.
             if ($isFilterApplyRequest && empty($explicitFilters)) {
                 if ($this->conf['use_session_cache'] && isset($_SESSION['userFilters'][$table])) {
                     unset($_SESSION['userFilters'][$table]);
@@ -200,7 +200,7 @@ class modules_user_filter_prefs {
             }
         }
 
-        // Persistiamo nuovi filtri solo in action list.
+        // Persist new filters only on list action.
         if ($action === 'list') {
             if (!empty($explicitFilters)) {
                 // L'utente ha applicato filtri espliciti: persisti.
@@ -213,7 +213,7 @@ class modules_user_filter_prefs {
             }
         }
 
-        // Nessun filtro esplicito: applica preferenze salvate.
+        // No explicit filters: restore saved preferences.
         foreach ($storedFilters as $key => $val) {
             if (!isset($query[$key]) || $query[$key] === '') {
                 $query[$key] = $val;

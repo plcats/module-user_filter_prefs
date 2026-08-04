@@ -6,6 +6,7 @@ Thumbs.db
 .idea/
 .vscode/
 *.code-workspace
+.cursor/
 
 # Composer
 /vendor/
@@ -15,3 +16,7 @@ composer.lock
 *.log
 *.tmp
 templates_c/
+
+# Maintainer-only scaffolding (never publish)
+/PUBLISHING.md
+/RELEASE_NOTES.md
